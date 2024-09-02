@@ -1,3 +1,4 @@
+// ReSharper disable CppDFAEndlessLoop
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,12 +70,28 @@ void execute_pipes(char **args) {
     }
 }
 
-char **parse_args(char *command) {
+char **read_command(int *args_count, int *piped) {
+    char command[MAX_COMMAND];
+    int c, i = 0;
+    *piped = *args_count = 0;
+
+    while ((c = getchar()) != '\n' && c != EOF) {
+        command[i++] = c;
+        if (c == '|')
+            *piped = 1;
+    }
+
+    if (i == 0)
+        return NULL;
+
+    command[i] = '\0';
+
     int buffer_size = 64;
-    int i = 0;
+    i = 0;
 
     char **args = malloc(buffer_size * sizeof(char *));
     char *arg = strtok(command, " \t\r\n");
+
     while (arg != NULL) {
         args[i++] = arg;
 
@@ -86,36 +103,26 @@ char **parse_args(char *command) {
         arg = strtok(NULL, " \t\r\n");
     }
 
+    *args_count = i;
     args[i] = NULL;
+
     return args;
-}
-
-char *read_command() {
-    char *command = malloc(MAX_COMMAND * sizeof(char));
-    int c;
-    int i = 0;
-
-    while ((c = getchar()) != '\n' && c != EOF)
-        command[i++] = c;
-
-    command[i] = '\0';  // Null-terminate the string
-    return command;
 }
 
 int main() {
     do {
         printf("> ");
-        char *input = read_command();
-        char **args = parse_args(input);
+        int arg_count, piped;
+        char **args = read_command(&arg_count, &piped);
 
-        if (args[0] != NULL) {
-            if (strchr(input, '|') != NULL)
-                execute_pipes(args);
-            else
-                execute_command(args);
-        }
+        if (arg_count == 0 || args == NULL)
+            continue;
 
-        free(input);
+        if (piped)
+            execute_pipes(args);
+        else
+            execute_command(args);
+
         free(args);
     } while (1);
 
