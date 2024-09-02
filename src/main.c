@@ -1,4 +1,5 @@
 // ReSharper disable CppDFAEndlessLoop
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,16 +20,28 @@ void execute_command(char **args) {
     // child
     if (pid == 0) {
         if (execvp(args[0], args) == -1) {
-            perror("execvp");
+            if (errno == ENOENT)
+                fprintf(stderr, "%s: command not found\n", args[0]);
+            else
+                perror("execvp");
         }
+
         exit(EXIT_FAILURE);
     }
 
     // parent
-    int state;
+    int status;
     do {
-        waitpid(pid, &state, WUNTRACED);
-    } while (!WIFEXITED(state) && !WIFSIGNALED(state));
+        if (waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
+            perror("waitpid");
+            break;
+        }
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            // sleep 200 ms
+            usleep(200000);
+        }
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 }
 
 void execute_pipes(char **args) {
@@ -55,7 +68,13 @@ void execute_pipes(char **args) {
             close(pipe_fd[0]);
 
             if (execvp(*args, args) == -1) {
-                perror("execvp");
+                if (execvp(args[0], args) == -1) {
+                    if (errno == ENOENT)
+                        fprintf(stderr, "%s: command not found\n", args[0]);
+                    else
+                        perror("execvp");
+                }
+
                 exit(EXIT_FAILURE);
             }
 
