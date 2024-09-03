@@ -8,9 +8,10 @@
 #include <sys/wait.h>
 
 #include "cd.h"
+#include "exit.h"
 
 #define MAX_COMMAND 1024
-#define CUSTOM_COMMANDS 1
+#define CUSTOM_COMMANDS 2
 
 typedef struct Command {
     char *name;
@@ -19,6 +20,7 @@ typedef struct Command {
 
 const Command custom_commands[CUSTOM_COMMANDS] = {
     {"cd", exec_cd},
+    {"exit", exec_exit},
 };
 
 void execute_command(const int argc, char **argv) {

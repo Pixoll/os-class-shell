@@ -8,4 +8,6 @@ add_executable(
         src/main.c
         src/cd.c
         src/cd.h
+        src/exit.c
+        src/exit.h
 )
