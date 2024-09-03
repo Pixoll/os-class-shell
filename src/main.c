@@ -10,7 +10,6 @@
 #include "cd.h"
 #include "exit.h"
 
-#define MAX_COMMAND 1024
 #define CUSTOM_COMMANDS 2
 
 typedef struct Command {
@@ -107,33 +106,41 @@ void execute_pipes(char **args) {
 }
 
 char **read_command(int *args_count, int *piped) {
-    char command[MAX_COMMAND];
+    int command_buffer_size = 64;
+    char *command = malloc(command_buffer_size);
     int c, i = 0;
     *piped = *args_count = 0;
 
     while ((c = getchar()) != '\n' && c != EOF) {
+        if (i >= command_buffer_size) {
+            command_buffer_size *= 2;
+            command = realloc(command, command_buffer_size);
+        }
+
         command[i++] = c;
         if (c == '|')
             *piped = 1;
     }
 
-    if (i == 0)
+    if (i == 0) {
+        free(command);
         return NULL;
+    }
 
     command[i] = '\0';
 
-    int buffer_size = 64;
+    int args_buffer_size = 64;
     i = 0;
 
-    char **args = malloc(buffer_size * sizeof(char *));
-    char *arg = strtok(command, " \t\r\n");
+    char **args = malloc(args_buffer_size * sizeof(char *));
+    const char *arg = strtok(command, " \t\r\n");
 
     while (arg != NULL) {
-        args[i++] = arg;
+        args[i++] = strdup(arg);
 
-        if (i >= buffer_size) {
-            buffer_size += 64;
-            args = realloc(args, buffer_size * sizeof(char *));
+        if (i >= args_buffer_size) {
+            args_buffer_size += 64;
+            args = realloc(args, args_buffer_size * sizeof(char *));
         }
 
         arg = strtok(NULL, " \t\r\n");
@@ -141,6 +148,7 @@ char **read_command(int *args_count, int *piped) {
 
     *args_count = i;
     args[i] = NULL;
+    free(command);
 
     return args;
 }
@@ -162,6 +170,8 @@ int main() {
         else
             execute_command(arg_count, args);
 
+        for (int i = 0; i < arg_count; i++)
+            free(args[i]);
         free(args);
     } while (1);
 
