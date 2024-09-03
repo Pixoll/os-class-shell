@@ -146,8 +146,6 @@ char **read_command(int *args_count, int *piped) {
 }
 
 int main() {
-    dup2(1, 2);
-
     do {
         char cwd[PATH_MAX];
         getcwd(cwd, sizeof(cwd));
