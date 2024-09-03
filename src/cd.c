@@ -14,14 +14,14 @@ int exec_cd(const int argc, const char **argv) {
         getcwd(last_dir, PATH_MAX);
 
     if (argc < 1) {
-        fprintf(stderr, "Usage: cd <path>\n");
+        fprintf(stderr, "cd: Usage: cd <path>\n");
         return 1;
     }
 
     const char *arg = argv[1];
 
     if (arg != NULL && strlen(arg) > PATH_MAX) {
-        fprintf(stderr, "Path is too long\n");
+        fprintf(stderr, "cd: Path is too long\n");
         return 1;
     }
 
@@ -38,7 +38,7 @@ int exec_cd(const int argc, const char **argv) {
 
     if (!strcmp(arg, "-")) {
         if (*last_dir == '\0') {
-            fprintf(stderr, "no previous directory\n");
+            fprintf(stderr, "cd: no previous directory\n");
             return 1;
         }
         arg = last_dir;
@@ -52,14 +52,14 @@ int exec_cd(const int argc, const char **argv) {
             } else {
                 /* ~name should expand to the home directory of user with login `name`
                    this can be implemented with getpwent() */
-                fprintf(stderr, "syntax not supported: %s\n", arg);
+                fprintf(stderr, "cd: syntax not supported: %s\n", arg);
                 return 1;
             }
         }
     }
 
     if (chdir(arg)) {
-        fprintf(stderr, "%s: %s\n", strerror(errno), arg);
+        fprintf(stderr, "cd: %s: %s\n", strerror(errno), arg);
         return 1;
     }
 
