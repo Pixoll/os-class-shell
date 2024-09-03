@@ -4,11 +4,31 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <linux/limits.h>
 #include <sys/wait.h>
 
-#define MAX_COMMAND 1024
+#include "cd.h"
 
-void execute_command(char **args) {
+#define MAX_COMMAND 1024
+#define CUSTOM_COMMANDS 1
+
+typedef struct Command {
+    char *name;
+    int (*command)(int argc, const char **argv);
+} Command;
+
+const Command custom_commands[CUSTOM_COMMANDS] = {
+    {"cd", exec_cd},
+};
+
+void execute_command(const int argc, char **argv) {
+    for (int i = 0; i < CUSTOM_COMMANDS; i++) {
+        if (strcmp(custom_commands[i].name, argv[0]) == 0) {
+            custom_commands[i].command(argc, argv);
+            return;
+        }
+    }
+
     const pid_t pid = fork();
 
     // error
@@ -19,9 +39,9 @@ void execute_command(char **args) {
 
     // child
     if (pid == 0) {
-        if (execvp(args[0], args) == -1) {
+        if (execvp(argv[0], argv) == -1) {
             if (errno == ENOENT)
-                fprintf(stderr, "%s: command not found\n", args[0]);
+                fprintf(stderr, "%s: command not found\n", argv[0]);
             else
                 perror("execvp");
         }
@@ -35,11 +55,6 @@ void execute_command(char **args) {
         if (waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
             perror("waitpid");
             break;
-        }
-
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-            // sleep 200 ms
-            usleep(200000);
         }
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 }
@@ -129,8 +144,13 @@ char **read_command(int *args_count, int *piped) {
 }
 
 int main() {
+    dup2(1, 2);
+
     do {
-        printf("> ");
+        char cwd[PATH_MAX];
+        getcwd(cwd, sizeof(cwd));
+        printf("%s$ ", cwd);
+
         int arg_count, piped;
         char **args = read_command(&arg_count, &piped);
 
@@ -140,7 +160,7 @@ int main() {
         if (piped)
             execute_pipes(args);
         else
-            execute_command(args);
+            execute_command(arg_count, args);
 
         free(args);
     } while (1);

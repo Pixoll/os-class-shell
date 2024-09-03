@@ -6,4 +6,6 @@ set(CMAKE_C_STANDARD 11)
 add_executable(
         shell
         src/main.c
+        src/cd.c
+        src/cd.h
 )
