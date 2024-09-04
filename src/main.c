@@ -1,6 +1,7 @@
 // ReSharper disable CppDFAEndlessLoop
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,18 +16,27 @@
 #define CUSTOM_COMMANDS 2
 
 typedef struct Command {
-    char *name;
-    int (*command)(int argc, const char **argv);
+    char *command;
+    bool piped;
+    int argc;
+    char **argv;
 } Command;
 
-const Command custom_commands[CUSTOM_COMMANDS] = {
+typedef struct CustomCommand {
+    char *name;
+    int (*command)(int argc, const char **argv);
+} CustomCommand;
+
+const CustomCommand custom_commands[CUSTOM_COMMANDS] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
 };
 
+char **last_command;
+
 void handle_sigint(int code);
 char *replace_str(char *str, const char *orig, char *rep, int start);
-char **read_command(int *args_count, int *piped);
+Command read_command();
 void execute_command(int argc, char **argv);
 void execute_pipes(char **args);
 
@@ -46,23 +56,21 @@ int main() {
         replace_str(cwd, home_path, "~", 0);
         printf("\x1b[1;32m%s@%s\x1b[0m:\x1b[1;34m%s\x1b[0m$ ", getenv("USER"), hostname, cwd);
 
-        int arg_count, piped;
-        char **args = read_command(&arg_count, &piped);
+        const Command command = read_command();
 
-        if (arg_count == 0 || args == NULL)
+        if (command.command == NULL || command.argc == 0 || command.argv == NULL)
             continue;
 
-        if (piped)
-            execute_pipes(args);
+        if (command.piped)
+            execute_pipes(command.argv);
         else
-            execute_command(arg_count, args);
+            execute_command(command.argc, command.argv);
 
-        for (int i = 0; i < arg_count; i++)
-            free(args[i]);
-        free(args);
+        free(command.command);
+        for (int i = 0; i < command.argc; i++)
+            free(command.argv[i]);
+        free(command.argv);
     } while (1);
-
-    return 0;
 }
 
 void execute_command(const int argc, char **argv) {
@@ -148,55 +156,56 @@ void execute_pipes(char **args) {
     }
 }
 
-char **read_command(int *args_count, int *piped) {
+Command read_command() {
     int command_buffer_size = 64;
     char *command = malloc(command_buffer_size);
-    int c, i = 0;
-    *piped = *args_count = 0;
+    int c, command_length = 0;
+    bool piped = false;
 
     while ((c = getchar()) != '\n') {
         if (c == EOF)
             handle_sigint(EOF);
 
-        if (i >= command_buffer_size) {
+        if (c == '|')
+            piped = true;
+
+        if (command_length >= command_buffer_size) {
             command_buffer_size *= 2;
             command = realloc(command, command_buffer_size);
         }
 
-        command[i++] = c;
-        if (c == '|')
-            *piped = 1;
+        command[command_length++] = c;
     }
 
-    if (i == 0) {
+    if (command_length == 0) {
         free(command);
-        return NULL;
+        return (Command){NULL, false, 0, NULL};
     }
 
-    command[i] = '\0';
+    command[command_length] = '\0';
 
+    char *command_dup = strdup(command);
     int args_buffer_size = 64;
-    i = 0;
+    int argc = 0;
 
-    char **args = malloc(args_buffer_size * sizeof(char *));
-    const char *arg = strtok(command, " \t\r\n");
+    char **argv = malloc(args_buffer_size * sizeof(char *));
+    const char *arg = strtok(command_dup, " \t\r\n");
 
     while (arg != NULL) {
-        args[i++] = strdup(arg);
+        argv[argc++] = strdup(arg);
 
-        if (i >= args_buffer_size) {
+        if (argc >= args_buffer_size) {
             args_buffer_size += 64;
-            args = realloc(args, args_buffer_size * sizeof(char *));
+            argv = realloc(argv, args_buffer_size * sizeof(char *));
         }
 
         arg = strtok(NULL, " \t\r\n");
     }
 
-    *args_count = i;
-    args[i] = NULL;
-    free(command);
+    argv[argc] = NULL;
+    free(command_dup);
 
-    return args;
+    return (Command){command, piped, argc, argv};
 }
 
 char *replace_str(char *str, const char *orig, char *rep, const int start) {
