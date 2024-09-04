@@ -24,14 +24,14 @@ const Command custom_commands[CUSTOM_COMMANDS] = {
     {"exit", exec_exit},
 };
 
-void print_exit(int code);
+void handle_sigint(int code);
 char *replace_str(char *str, const char *orig, char *rep, int start);
 char **read_command(int *args_count, int *piped);
 void execute_command(int argc, char **argv);
 void execute_pipes(char **args);
 
 int main() {
-    signal(SIGINT, print_exit);
+    signal(SIGINT, handle_sigint);
 
     printf("+-------+\n| Shell |\n+-------+\n\n");
 
@@ -156,7 +156,7 @@ char **read_command(int *args_count, int *piped) {
 
     while ((c = getchar()) != '\n') {
         if (c == EOF)
-            exec_exit(0, NULL);
+            handle_sigint(EOF);
 
         if (i >= command_buffer_size) {
             command_buffer_size *= 2;
@@ -218,7 +218,7 @@ char *replace_str(char *str, const char *orig, char *rep, const int start) {
     return str;
 }
 
-void print_exit(const int code) {
+void handle_sigint(const int code) {
     printf("\nBye!\n");
     exit(code);
 }
