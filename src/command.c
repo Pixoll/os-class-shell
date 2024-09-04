@@ -34,6 +34,12 @@ Command read_command() {
 
     command[command_length] = '\0';
 
+    const ProcessArgs args = parse_args(command);
+
+    return (Command){command, piped, args.argc, args.argv};
+}
+
+ProcessArgs parse_args(const char *command) {
     char *command_dup = strdup(command);
     int args_buffer_size = 64;
     int argc = 0;
@@ -55,7 +61,7 @@ Command read_command() {
     argv[argc] = NULL;
     free(command_dup);
 
-    return (Command){command, piped, argc, argv};
+    return (ProcessArgs){argc, argv};
 }
 
 bool is_command_empty(const Command command) {
