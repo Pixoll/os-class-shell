@@ -8,7 +8,9 @@
 #include "command.h"
 #include "execute.h"
 
+#ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 64
+#endif
 
 Command last_command = {NULL, false, 0, NULL};
 
