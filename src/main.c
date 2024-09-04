@@ -1,5 +1,6 @@
 // ReSharper disable CppDFAEndlessLoop
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,12 +24,15 @@ const Command custom_commands[CUSTOM_COMMANDS] = {
     {"exit", exec_exit},
 };
 
+void print_exit(int code);
 char *replace_str(char *str, const char *orig, char *rep, int start);
 char **read_command(int *args_count, int *piped);
 void execute_command(int argc, char **argv);
 void execute_pipes(char **args);
 
 int main() {
+    signal(SIGINT, print_exit);
+
     printf("+-------+\n| Shell |\n+-------+\n\n");
 
     const char *home_path = getenv("HOME");
@@ -209,4 +213,9 @@ char *replace_str(char *str, const char *orig, char *rep, const int start) {
     sprintf(str + start, "%s", buffer);
 
     return str;
+}
+
+void print_exit(const int code) {
+    printf("\nBye!\n");
+    exit(code);
 }
