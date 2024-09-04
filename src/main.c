@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <bits/local_lim.h>
 
 #include "command.h"
 #include "execute.h"
+
+#define HOST_NAME_MAX 64
 
 Command last_command = {NULL, false, 0, NULL};
 
