@@ -32,11 +32,13 @@ const CustomCommand custom_commands[CUSTOM_COMMANDS] = {
     {"exit", exec_exit},
 };
 
-char **last_command;
+Command last_command = {NULL, false, 0, NULL};
 
 void handle_sigint(int code);
 char *replace_str(char *str, const char *orig, char *rep, int start);
 Command read_command();
+bool is_command_empty(Command command);
+void free_command(Command command);
 void execute_command(int argc, char **argv);
 void execute_pipes(char **args);
 
@@ -56,20 +58,26 @@ int main() {
         replace_str(cwd, home_path, "~", 0);
         printf("\x1b[1;32m%s@%s\x1b[0m:\x1b[1;34m%s\x1b[0m$ ", getenv("USER"), hostname, cwd);
 
-        const Command command = read_command();
+        Command command = read_command();
 
-        if (command.command == NULL || command.argc == 0 || command.argv == NULL)
+        if (is_command_empty(command))
             continue;
+
+        if (!is_command_empty(last_command) && strcmp(command.command, "!!") == 0) {
+            free_command(command);
+            printf("%s\n", last_command.command);
+            command = last_command;
+        }
 
         if (command.piped)
             execute_pipes(command.argv);
         else
             execute_command(command.argc, command.argv);
 
-        free(command.command);
-        for (int i = 0; i < command.argc; i++)
-            free(command.argv[i]);
-        free(command.argv);
+        if (!is_command_empty(last_command))
+            free_command(last_command);
+
+        last_command = command;
     } while (1);
 }
 
@@ -206,6 +214,17 @@ Command read_command() {
     free(command_dup);
 
     return (Command){command, piped, argc, argv};
+}
+
+bool is_command_empty(const Command command) {
+    return command.command == NULL || command.argc == 0 || command.argv == NULL;
+}
+
+void free_command(const Command command) {
+    free(command.command);
+    for (int i = 0; i < command.argc; i++)
+        free(command.argv[i]);
+    free(command.argv);
 }
 
 char *replace_str(char *str, const char *orig, char *rep, const int start) {
