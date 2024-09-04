@@ -10,4 +10,8 @@ add_executable(
         src/cd.h
         src/exit.c
         src/exit.h
+        src/command.c
+        src/command.h
+        src/execute.c
+        src/execute.h
 )
