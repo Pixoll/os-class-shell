@@ -10,20 +10,20 @@
 #include "cd.h"
 #include "exit.h"
 
-#define CUSTOM_COMMANDS 2
-
 typedef struct CustomCommand {
     char *name;
     int (*command)(int argc, const char **argv);
 } CustomCommand;
 
-const CustomCommand custom_commands[CUSTOM_COMMANDS] = {
+static const CustomCommand custom_commands[] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
 };
 
+static const int custom_commands_count = sizeof(custom_commands) / sizeof(CustomCommand);
+
 void execute_command(const int argc, char **argv) {
-    for (int i = 0; i < CUSTOM_COMMANDS; i++) {
+    for (int i = 0; i < custom_commands_count; i++) {
         if (strcmp(custom_commands[i].name, argv[0]) == 0) {
             custom_commands[i].command(argc, argv);
             return;
