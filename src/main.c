@@ -154,7 +154,10 @@ char **read_command(int *args_count, int *piped) {
     int c, i = 0;
     *piped = *args_count = 0;
 
-    while ((c = getchar()) != '\n' && c != EOF) {
+    while ((c = getchar()) != '\n') {
+        if (c == EOF)
+            exec_exit(0, NULL);
+
         if (i >= command_buffer_size) {
             command_buffer_size *= 2;
             command = realloc(command, command_buffer_size);
