@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <bits/local_lim.h>
 #include <linux/limits.h>
 #include <sys/wait.h>
 
@@ -21,6 +22,44 @@ const Command custom_commands[CUSTOM_COMMANDS] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
 };
+
+char *replace_str(char *str, const char *orig, char *rep, int start);
+char **read_command(int *args_count, int *piped);
+void execute_command(int argc, char **argv);
+void execute_pipes(char **args);
+
+int main() {
+    printf("+-------+\n| Shell |\n+-------+\n\n");
+
+    const char *home_path = getenv("HOME");
+
+    char hostname[HOST_NAME_MAX + 1];
+    gethostname(hostname, sizeof(hostname));
+
+    do {
+        char cwd[PATH_MAX];
+        getcwd(cwd, sizeof(cwd));
+        replace_str(cwd, home_path, "~", 0);
+        printf("\x1b[1;32m%s@%s\x1b[0m:\x1b[1;34m%s\x1b[0m$ ", getenv("USER"), hostname, cwd);
+
+        int arg_count, piped;
+        char **args = read_command(&arg_count, &piped);
+
+        if (arg_count == 0 || args == NULL)
+            continue;
+
+        if (piped)
+            execute_pipes(args);
+        else
+            execute_command(arg_count, args);
+
+        for (int i = 0; i < arg_count; i++)
+            free(args[i]);
+        free(args);
+    } while (1);
+
+    return 0;
+}
 
 void execute_command(const int argc, char **argv) {
     for (int i = 0; i < CUSTOM_COMMANDS; i++) {
@@ -153,27 +192,21 @@ char **read_command(int *args_count, int *piped) {
     return args;
 }
 
-int main() {
-    do {
-        char cwd[PATH_MAX];
-        getcwd(cwd, sizeof(cwd));
-        printf("%s$ ", cwd);
+char *replace_str(char *str, const char *orig, char *rep, const int start) {
+    static char temp[4096];
+    static char buffer[4096];
+    char *p;
 
-        int arg_count, piped;
-        char **args = read_command(&arg_count, &piped);
+    strcpy(temp, str + start);
 
-        if (arg_count == 0 || args == NULL)
-            continue;
+    if (!((p = strstr(temp, orig))))  // Is 'orig' even in 'temp'?
+        return temp;
 
-        if (piped)
-            execute_pipes(args);
-        else
-            execute_command(arg_count, args);
+    strncpy(buffer, temp, p - temp); // Copy characters from 'temp' start to 'orig' str
+    buffer[p - temp] = '\0';
 
-        for (int i = 0; i < arg_count; i++)
-            free(args[i]);
-        free(args);
-    } while (1);
+    sprintf(buffer + (p - temp), "%s%s", rep, p + strlen(orig));
+    sprintf(str + start, "%s", buffer);
 
-    return 0;
+    return str;
 }
