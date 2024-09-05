@@ -10,7 +10,7 @@ Command read_command() {
     int c, command_length = 0;
     bool piped = false;
 
-    while ((c = getchar()) != '\n') {
+    while ((c = getchar()) != '\n' && c != '\r') {
         if (c == EOF) {
             printf("\nBye!\n");
             exit(EOF);
@@ -21,7 +21,7 @@ Command read_command() {
 
         if (command_length >= command_buffer_size) {
             command_buffer_size *= 2;
-            command = realloc(command, command_buffer_size);
+            realloc(command, command_buffer_size);
         }
 
         command[command_length++] = c;
@@ -39,27 +39,69 @@ Command read_command() {
     return (Command){command, piped, args.argc, args.argv};
 }
 
+void add_arg(char *arg, int *arg_len, char **argv, int *argc, int *args_buffer_size) {
+    if (*arg_len == 0)
+        return;
+
+    if (*argc >= *args_buffer_size) {
+        *args_buffer_size += 64;
+        realloc(argv, *args_buffer_size * sizeof(char *));
+    }
+
+    arg[*arg_len] = 0;
+    argv[*argc] = strdup(arg);
+    *argc += 1;
+
+    for (int i = 0; i < *arg_len; i++)
+        arg[i] = 0;
+    *arg_len = 0;
+}
+
 ProcessArgs parse_args(const char *command) {
-    char *command_dup = strdup(command);
+    const int command_len = strlen(command);
+
     int args_buffer_size = 64;
     int argc = 0;
-
     char **argv = malloc(args_buffer_size * sizeof(char *));
-    const char *arg = strtok(command_dup, " \t\r\n");
 
-    while (arg != NULL) {
-        argv[argc++] = strdup(arg);
+    int arg_len = 0;
+    char arg[command_len];
+    arg[0] = 0;
 
-        if (argc >= args_buffer_size) {
-            args_buffer_size += 64;
-            argv = realloc(argv, args_buffer_size * sizeof(char *));
+    for (int i = 0; i < command_len; i++) {
+        const char c = command[i];
+
+        if (c == '"') {
+            add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
+
+            const int j = i;
+            bool escaped = false;
+
+            while (i < command_len && command[i] != '"' && !escaped) {
+                if (command[i] == '\\')
+                    escaped = true;
+
+                arg[arg_len++] = command[i++];
+            }
+
+            if (arg[arg_len - 1] != '"')
+                fprintf(stderr, "Unmatched quote:\n%s\n%*s^ here\n", command, j, "");
+
+            add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
+            continue;
         }
 
-        arg = strtok(NULL, " \t\r\n");
+        if (c != ' ' && c != '\t') {
+            arg[arg_len++] = c;
+
+            if (i < command_len - 1)
+                continue;
+        }
+
+        add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
     }
 
     argv[argc] = NULL;
-    free(command_dup);
 
     return (ProcessArgs){argc, argv};
 }
