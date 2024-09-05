@@ -61,46 +61,60 @@ void execute_command(const int argc, char **argv) {
 }
 
 void execute_pipes(char **args) {
+    int pipe_count = 0;
+    for (int i = 0; args[i] != NULL; i++) {
+        if (strcmp(args[i], "|") == 0) {
+            pipe_count++;
+        }
+    }
+
+    char *commands[pipe_count + 1][64];
+    int command_index = 0, arg_index = 0;
+
+    for (int i = 0; args[i] != NULL; i++) {
+        if (strcmp(args[i], "|") == 0) {
+            commands[command_index][arg_index] = NULL;
+            command_index++;
+            arg_index = 0;
+        } else {
+            commands[command_index][arg_index++] = args[i];
+        }
+    }
+    commands[command_index][arg_index] = NULL;
+
     int fd_in = 0;
 
-    while (*args != NULL) {
+    for (int i = 0; i <= pipe_count; i++) {
         int pipe_fd[2];
-        pipe(pipe_fd);
-        const pid_t pid = fork();
-
-        // error
-        if (pid < 0) {
-            perror("fork");
-            return;
+        if (pipe(pipe_fd) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
         }
 
-        // child
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
         if (pid == 0) {
-            dup2(fd_in, 0);
-            if (*(args + 1) != NULL) {
-                dup2(pipe_fd[1], 1);
+            dup2(fd_in, STDIN_FILENO);
+
+            if (i < pipe_count) {
+                dup2(pipe_fd[1], STDOUT_FILENO);
             }
 
             close(pipe_fd[0]);
 
-            if (execvp(*args, args) == -1) {
-                if (execvp(args[0], args) == -1) {
-                    if (errno == ENOENT)
-                        fprintf(stderr, "%s: command not found\n", args[0]);
-                    else
-                        perror("execvp");
-                }
+            execute_command(arg_index, commands[i]);
 
-                exit(EXIT_FAILURE);
-            }
-
-            continue;
+            perror("execute_command");
+            exit(EXIT_FAILURE);
         }
 
-        // parent
-        wait(NULL);
         close(pipe_fd[1]);
         fd_in = pipe_fd[0];
-        args++;
+        wait(NULL);
     }
 }
