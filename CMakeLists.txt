@@ -16,4 +16,6 @@ add_executable(
         src/execute.h
         src/recordatorio.h
         src/recordatorio.c
+        src/prompt.c
+        src/prompt.h
 )
