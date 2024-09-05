@@ -8,6 +8,7 @@
 
 #include "command.h"
 #include "execute.h"
+#include "recordatorio.h"
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 64
@@ -43,6 +44,16 @@ int main() {
             free_command(command);
             printf("%s\n", last_command.command);
             command = last_command;
+        }
+        if(strncmp(command.command, "set recordatorio", 16) == 0) {
+            int time;
+            char msg[256];
+            if(sscanf(command.command, "set recordatorio %d \"%[^\"]\"", &time, msg) == 2) {
+                recordatorio(time,msg);
+            }else {
+                printf("Error: Comando incorrecto. Uso: set recordatorio <segundos> \"<mensaje>\"\n");
+            }
+
         }
 
         if (command.piped)
