@@ -1,5 +1,14 @@
 # OS Class Shell
 
+Ubuntu-like shell.
+
+Built-ins:
+- `!!`
+- `cd`
+- `exit`
+- `favs`
+- `set recordatorio`
+
 ## Compile
 
 With CMake (>= 3.5):
