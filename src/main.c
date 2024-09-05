@@ -8,7 +8,6 @@
 #include "command.h"
 #include "execute.h"
 #include "prompt.h"
-#include "recordatorio.h"
 
 Command last_command = {NULL, false, 0, NULL};
 
