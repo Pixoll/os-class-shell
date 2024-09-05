@@ -27,7 +27,7 @@ static const int custom_commands_count = sizeof(custom_commands) / sizeof(Custom
 void execute_command(const int argc, char **argv) {
     for (int i = 0; i < custom_commands_count; i++) {
         if (strcmp(custom_commands[i].name, argv[0]) == 0) {
-            custom_commands[i].command(argc, argv);
+            custom_commands[i].command(argc, (const char **)argv);
             return;
         }
     }
@@ -108,10 +108,7 @@ void execute_pipes(char **args) {
             }
 
             close(pipe_fd[0]);
-
             execute_command(arg_index, commands[i]);
-
-            perror("execute_command");
             exit(EXIT_FAILURE);
         }
 
