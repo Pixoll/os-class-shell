@@ -9,6 +9,7 @@
 
 #include "cd.h"
 #include "exit.h"
+#include "recordatorio.h"
 
 typedef struct CustomCommand {
     char *name;
@@ -18,6 +19,7 @@ typedef struct CustomCommand {
 static const CustomCommand custom_commands[] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
+    {"set", exec_set_recordatorio},
 };
 
 static const int custom_commands_count = sizeof(custom_commands) / sizeof(CustomCommand);

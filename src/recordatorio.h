@@ -1,5 +1,6 @@
 #ifndef RECORDATORIO_H
 #define RECORDATORIO_H
 
-void recordatorio(int time, const char* msg);
-#endif //RECORDATORIO_H
+int exec_set_recordatorio(int argc, const char **argv);
+
+#endif
