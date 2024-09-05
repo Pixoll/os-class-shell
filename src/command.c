@@ -21,7 +21,11 @@ Command read_command() {
 
         if (command_length >= command_buffer_size) {
             command_buffer_size *= 2;
-            realloc(command, command_buffer_size);
+            if (realloc(command, command_buffer_size) == NULL) {
+                free(command);
+                printf("\nOut of memory!\n");
+                exit(EXIT_FAILURE);
+            }
         }
 
         command[command_length++] = c;
@@ -45,7 +49,11 @@ void add_arg(char *arg, int *arg_len, char **argv, int *argc, int *args_buffer_s
 
     if (*argc >= *args_buffer_size) {
         *args_buffer_size += 64;
-        realloc(argv, *args_buffer_size * sizeof(char *));
+        if (realloc(argv, *args_buffer_size * sizeof(char *)) == NULL) {
+            free(argv);
+            printf("\nOut of memory!\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     arg[*arg_len] = 0;
@@ -74,7 +82,7 @@ ProcessArgs parse_args(const char *command) {
         if (c == '"') {
             add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
 
-            const int j = i;
+            const int j = i++;
             bool escaped = false;
 
             while (i < command_len && command[i] != '"' && !escaped) {
@@ -84,7 +92,7 @@ ProcessArgs parse_args(const char *command) {
                 arg[arg_len++] = command[i++];
             }
 
-            if (arg[arg_len - 1] != '"')
+            if (command[i] != '"')
                 fprintf(stderr, "Unmatched quote:\n%s\n%*s^ here\n", command, j, "");
 
             add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
