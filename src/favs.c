@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "command.h"
+
 #define MAX_COMMANDS 100
 #define MAX_LENGTH 1024
 
@@ -117,4 +119,37 @@ void ejecutar_favorito(int num) {
         }
     }
     printf("No se encontró el comando con el número %d.\n", num);
+}
+
+int exec_favs(Command command) {
+    //Lógica de manejo de favoritos
+    if (strncmp(command.command, "favs crear ", 11) == 0) {
+        strncpy(fav_file, command.command + 11, MAX_LENGTH);
+        FILE *file = fopen(fav_file, "w");
+        if (file) {
+            fclose(file);
+            printf("Archivo de favoritos creado en: %s\n", fav_file);
+        } else {
+            perror("Error al crear el archivo");
+        }
+    } else if (strcmp(command.command, "favs mostrar") == 0) {
+        mostrar_favoritos();
+    } else if (strncmp(command.command, "favs eliminar ", 14) == 0) {
+        eliminar_favoritos(command.command + 14);
+    } else if (strncmp(command.command, "favs buscar ", 12) == 0) {
+        buscar_favoritos(command.command + 12);
+    } else if (strcmp(command.command, "favs borrar") == 0) {
+        fav_count = 0;
+        printf("Todos los favoritos han sido borrados.\n");
+    } else if (strncmp(command.command, "favs ", 5) == 0 && strstr(command.command, " ejecutar") != NULL) {
+        int num = atoi(command.command + 5);
+        ejecutar_favorito(num);
+    } else if (strcmp(command.command, "favs cargar") == 0) {
+        cargar_favoritos();
+    } else if (strcmp(command.command, "favs guardar") == 0) {
+        guardar_favoritos();
+    } else {
+        agregar_favorito(command.command);
+        system(command.command);
+    }
 }
