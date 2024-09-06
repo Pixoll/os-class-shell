@@ -40,7 +40,7 @@ Command read_command() {
         return EMPTY_COMMAND;
     }
 
-    command[command_length] = '\0';
+    command[command_length] = 0;
 
     const ProcessArgs args = parse_args(command);
 

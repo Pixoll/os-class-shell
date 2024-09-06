@@ -38,7 +38,7 @@ char *replace_str(char *str, const char *orig, char *rep, const int start) {
         return temp;
 
     strncpy(buffer, temp, p - temp); // Copy characters from 'temp' start to 'orig' str
-    buffer[p - temp] = '\0';
+    buffer[p - temp] = 0;
 
     sprintf(buffer + (p - temp), "%s%s", rep, p + strlen(orig));
     sprintf(str + start, "%s", buffer);

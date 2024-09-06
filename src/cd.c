@@ -29,7 +29,7 @@ int exec_cd(const int argc, const char **argv) {
 
     if (getcwd(current_dir, sizeof current_dir) == NULL) {
         /* current directory might be unreachable: not an error */
-        *current_dir = '\0';
+        *current_dir = 0;
     }
 
     if (arg == NULL) {
@@ -37,7 +37,7 @@ int exec_cd(const int argc, const char **argv) {
     }
 
     if (!strcmp(arg, "-")) {
-        if (*last_dir == '\0') {
+        if (*last_dir == 0) {
             fprintf(stderr, "cd: no previous directory\n");
             return 1;
         }
@@ -45,7 +45,7 @@ int exec_cd(const int argc, const char **argv) {
     } else {
         /* this should be done on all words during the parse phase */
         if (*arg == '~') {
-            if (arg[1] == '/' || arg[1] == '\0') {
+            if (arg[1] == '/' || arg[1] == 0) {
                 char path[PATH_MAX];
                 snprintf(path, sizeof path, "%s%s", getenv("HOME"), arg + 1);
                 arg = path;
