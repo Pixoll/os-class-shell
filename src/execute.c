@@ -9,6 +9,7 @@
 
 #include "cd.h"
 #include "exit.h"
+#include "favs.h"
 #include "recordatorio.h"
 
 typedef struct BuiltinCommand {
@@ -20,6 +21,7 @@ static const BuiltinCommand builtin_commands[] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
     {"set", exec_set_recordatorio},
+    {"favs", exec_favs}
 };
 
 static const int builtins_amount = sizeof(builtin_commands) / sizeof(BuiltinCommand);
