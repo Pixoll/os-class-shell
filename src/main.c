@@ -31,9 +31,8 @@ int main() {
             command = last_command;
         }
 
-        if (strncmp(command.command, "favs", 4) == 0) {
-            exec_favs(command);
-        }
+        add_to_favs(command.input);
+
         if (command.piped)
             execute_pipes(command.argv);
         else
