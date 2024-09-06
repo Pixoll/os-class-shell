@@ -21,11 +21,15 @@ Command read_command() {
 
         if (command_length >= command_buffer_size) {
             command_buffer_size *= 2;
-            if (realloc(command, command_buffer_size) == NULL) {
+
+            char *reallocated = realloc(command, command_buffer_size);
+            if (reallocated == NULL) {
                 free(command);
                 printf("\nOut of memory!\n");
                 exit(EXIT_FAILURE);
             }
+
+            command = reallocated;
         }
 
         command[command_length++] = c;
@@ -43,21 +47,25 @@ Command read_command() {
     return (Command){command, piped, args.argc, args.argv};
 }
 
-void add_arg(char *arg, int *arg_len, char **argv, int *argc, int *args_buffer_size) {
+void add_arg(char *arg, int *arg_len, char ***argv, int *argc, int *args_buffer_size) {
     if (*arg_len == 0)
         return;
 
     if (*argc >= *args_buffer_size) {
         *args_buffer_size += 64;
-        if (realloc(argv, *args_buffer_size * sizeof(char *)) == NULL) {
-            free(argv);
+
+        char **reallocated = realloc(*argv, *args_buffer_size * sizeof(char *));
+        if (reallocated == NULL) {
+            free(*argv);
             printf("\nOut of memory!\n");
             exit(EXIT_FAILURE);
         }
+
+        *argv = reallocated;
     }
 
     arg[*arg_len] = 0;
-    argv[*argc] = strdup(arg);
+    (*argv)[*argc] = strdup(arg);
     *argc += 1;
 
     for (int i = 0; i < *arg_len; i++)
@@ -80,12 +88,15 @@ ProcessArgs parse_args(const char *command) {
         const char c = command[i];
 
         if (c == '"') {
-            add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
+            add_arg(arg, &arg_len, &argv, &argc, &args_buffer_size);
 
             const int j = i++;
             bool escaped = false;
 
-            while (i < command_len && command[i] != '"' && !escaped) {
+            while (i < command_len && (!escaped ? command[i] != '"' : true)) {
+                if (escaped)
+                    escaped = false;
+
                 if (command[i] == '\\')
                     escaped = true;
 
@@ -95,7 +106,7 @@ ProcessArgs parse_args(const char *command) {
             if (command[i] != '"')
                 fprintf(stderr, "Unmatched quote:\n%s\n%*s^ here\n", command, j, "");
 
-            add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
+            add_arg(arg, &arg_len, &argv, &argc, &args_buffer_size);
             continue;
         }
 
@@ -106,7 +117,7 @@ ProcessArgs parse_args(const char *command) {
                 continue;
         }
 
-        add_arg(arg, &arg_len, argv, &argc, &args_buffer_size);
+        add_arg(arg, &arg_len, &argv, &argc, &args_buffer_size);
     }
 
     argv[argc] = NULL;
