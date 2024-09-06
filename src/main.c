@@ -31,7 +31,7 @@ int main() {
         }
 
         if (strncmp(command.command, "favs", 4) == 0) {
-            int exec_favs(command);
+            exec_favs(command);
         }
         if (command.piped)
             execute_pipes(command.argv);
