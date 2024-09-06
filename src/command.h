@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef struct Command {
-    char *command;
+    char *input;
     bool piped;
     int argc;
     char **argv;
@@ -14,6 +14,8 @@ typedef struct ProcessArgs {
     int argc;
     char **argv;
 } ProcessArgs;
+
+#define EMPTY_COMMAND (Command){NULL, false, 0, NULL}
 
 Command read_command();
 ProcessArgs parse_args(const char *command);

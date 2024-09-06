@@ -20,8 +20,8 @@ typedef struct BuiltinCommand {
 static const BuiltinCommand builtin_commands[] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
+    {"favs", exec_favs},
     {"set", exec_set_recordatorio},
-    {"favs", exec_favs}
 };
 
 static const int builtins_amount = sizeof(builtin_commands) / sizeof(BuiltinCommand);

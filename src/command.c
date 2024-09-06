@@ -37,7 +37,7 @@ Command read_command() {
 
     if (command_length == 0) {
         free(command);
-        return (Command){NULL, false, 0, NULL};
+        return EMPTY_COMMAND;
     }
 
     command[command_length] = '\0';
@@ -126,11 +126,11 @@ ProcessArgs parse_args(const char *command) {
 }
 
 bool is_command_empty(const Command command) {
-    return command.command == NULL || command.argc == 0 || command.argv == NULL;
+    return command.input == NULL || command.argc == 0 || command.argv == NULL;
 }
 
 void free_command(const Command command) {
-    free(command.command);
+    free(command.input);
     for (int i = 0; i < command.argc; i++)
         free(command.argv[i]);
     free(command.argv);

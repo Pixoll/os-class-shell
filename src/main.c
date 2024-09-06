@@ -7,9 +7,10 @@
 
 #include "command.h"
 #include "execute.h"
-#include "prompt.h"
 #include "favs.h"
-Command last_command = {NULL, false, 0, NULL};
+#include "prompt.h"
+
+Command last_command = EMPTY_COMMAND;
 
 void handle_sigint(int code);
 
@@ -24,9 +25,9 @@ int main() {
         if (is_command_empty(command))
             continue;
 
-        if (!is_command_empty(last_command) && strcmp(command.command, "!!") == 0) {
+        if (!is_command_empty(last_command) && strcmp(command.input, "!!") == 0) {
             free_command(command);
-            printf("%s\n", last_command.command);
+            printf("%s\n", last_command.input);
             command = last_command;
         }
 
@@ -42,13 +43,10 @@ int main() {
             free_command(last_command);
 
         last_command = command;
+    } while (1);
+}
 
-        while (1);
-    }
-
-
-
-    void handle_sigint(const int code) {
-        printf("\nBye!\n");
-        exit(code);
-    }
+void handle_sigint(const int code) {
+    printf("\nBye!\n");
+    exit(code);
+}
