@@ -13,7 +13,7 @@
 
 typedef struct BuiltinCommand {
     char *name;
-    int (*command)(int argc, const char **argv);
+    int (*run)(int argc, const char **argv);
 } BuiltinCommand;
 
 static const BuiltinCommand builtin_commands[] = {
@@ -27,7 +27,7 @@ static const int builtins_amount = sizeof(builtin_commands) / sizeof(BuiltinComm
 void execute_command(const int argc, char **argv) {
     for (int i = 0; i < builtins_amount; i++) {
         if (strcmp(builtin_commands[i].name, argv[0]) == 0) {
-            builtin_commands[i].command(argc, (const char **)argv);
+            builtin_commands[i].run(argc, (const char **)argv);
             return;
         }
     }
