@@ -11,23 +11,23 @@
 #include "exit.h"
 #include "recordatorio.h"
 
-typedef struct CustomCommand {
+typedef struct BuiltinCommand {
     char *name;
     int (*command)(int argc, const char **argv);
-} CustomCommand;
+} BuiltinCommand;
 
-static const CustomCommand custom_commands[] = {
+static const BuiltinCommand builtin_commands[] = {
     {"cd", exec_cd},
     {"exit", exec_exit},
     {"set", exec_set_recordatorio},
 };
 
-static const int custom_commands_count = sizeof(custom_commands) / sizeof(CustomCommand);
+static const int builtins_amount = sizeof(builtin_commands) / sizeof(BuiltinCommand);
 
 void execute_command(const int argc, char **argv) {
-    for (int i = 0; i < custom_commands_count; i++) {
-        if (strcmp(custom_commands[i].name, argv[0]) == 0) {
-            custom_commands[i].command(argc, (const char **)argv);
+    for (int i = 0; i < builtins_amount; i++) {
+        if (strcmp(builtin_commands[i].name, argv[0]) == 0) {
+            builtin_commands[i].command(argc, (const char **)argv);
             return;
         }
     }
