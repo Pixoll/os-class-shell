@@ -46,6 +46,7 @@ int main() {
 }
 
 void handle_sigint(const int code) {
-    printf("\nBye!\n");
-    exit(code);
+    printf("\n");
+    prompt();
+    fflush(stdout);
 }
