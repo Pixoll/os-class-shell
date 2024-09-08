@@ -26,13 +26,13 @@ typedef struct FavCommands {
 } FavCommands;
 
 int create_fav_commands(const char **args);
-int show_fav_commands(const char **);
+int show_fav_commands(const char **args);
 int delete_fav_commands(const char **args);
 int search_fav_commands(const char **args);
-int clear_fav_commands(const char **);
+int clear_fav_commands(const char **args);
 int run_fav_commands(const char **args);
-int load_fav_commands(const char **);
-int save_fav_commands(const char **);
+int load_fav_commands(const char **args);
+int save_fav_commands(const char **args);
 
 static const Subcommand subcommands[] = {
     {"crear", create_fav_commands},
@@ -222,7 +222,7 @@ int create_fav_commands(const char **args) {
     return 0;
 }
 
-int show_fav_commands(const char **) {
+int show_fav_commands(const char **args) {
     if (fav_commands_path[0] == 0) {
         fprintf(stderr, "No favorite commands file found. Use \"favs crear|create <path>\" first.\n");
         return 1;
@@ -328,7 +328,7 @@ int search_fav_commands(const char **args) {
     return 0;
 }
 
-int clear_fav_commands(const char **) {
+int clear_fav_commands(const char **args) {
     if (fav_commands_path[0] == 0) {
         fprintf(stderr, "No favorite commands file found. Use \"favs crear|create <path>\" first.\n");
         return 1;
@@ -404,7 +404,7 @@ int run_fav_commands(const char **args) {
     return 0;
 }
 
-int load_fav_commands(const char **) {
+int load_fav_commands(const char **args) {
     if (fav_commands_path[0] == 0) {
         fprintf(stderr, "No favorite commands file found. Use \"favs crear|create <path>\" first.\n");
         return 1;
@@ -476,7 +476,7 @@ int load_fav_commands(const char **) {
     return 0;
 }
 
-int save_fav_commands(const char **) {
+int save_fav_commands(const char **args) {
     if (fav_commands_path[0] == 0) {
         fprintf(stderr, "No favorite commands file found. Use \"favs crear|create <path>\" first.\n");
         return 1;
